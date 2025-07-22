@@ -1,0 +1,7 @@
+type VerifyArgs = record {
+    release_short_hash : text
+}
+
+service : {
+    "verify" : (VerifyArgs) -> ()
+}

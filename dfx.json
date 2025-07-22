@@ -1,17 +1,17 @@
 {
-  "canisters": {
-    "http-gateway-verifier-backend": {
-      "candid": "src/http-gateway-verifier-backend/http-gateway-verifier-backend.did",
-      "package": "http-gateway-verifier-backend",
-      "type": "rust"
-    }
-  },
-  "defaults": {
-    "build": {
-      "args": "",
-      "packtool": ""
-    }
-  },
-  "output_env_file": ".env",
-  "version": 1
+    "canisters": {
+        "verifier": {
+            "candid": "src/verifier/interface.did",
+            "package": "http-gateway-verifier",
+            "type": "rust"
+        }
+    },
+    "defaults": {
+        "build": {
+            "args": "",
+            "packtool": ""
+        }
+    },
+    "output_env_file": ".env",
+    "version": 1
 }

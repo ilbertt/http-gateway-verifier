@@ -1,5 +1,3 @@
 [workspace]
-members = [
-    "src/http-gateway-verifier-backend"
-]
+members = ["src/verifier"]
 resolver = "2"
