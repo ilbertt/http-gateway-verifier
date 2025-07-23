@@ -9,7 +9,7 @@ use ic_cdk::{
     },
 };
 use sev::{
-    certs::snp::{ca::Chain as CaChain, Certificate, Chain, Verifiable},
+    certs::snp::{ca::Chain as CaChain, Certificate, Verifiable},
     firmware::{guest::AttestationReport, host::CertType},
 };
 use x509_parser::{nom::AsBytes, pem::parse_x509_pem, prelude::X509Extension, x509::X509Name};
@@ -87,15 +87,9 @@ pub fn validate_certificate_chain(
     let vek_type = "vcek";
     let sign_type = "asvk";
 
-    // Get a cert chain from directory
-    let cert_chain = Chain {
-        ca: ca_chain,
-        vek: vcek_cert,
-    };
-
-    let ark = cert_chain.ca.ark;
-    let ask = cert_chain.ca.ask;
-    let vek = cert_chain.vek;
+    let ark = ca_chain.ark;
+    let ask = ca_chain.ask;
+    let vek = vcek_cert;
 
     let mut log = String::new();
 
