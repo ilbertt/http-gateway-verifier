@@ -85,7 +85,7 @@ pub fn validate_certificate_chain(
     vcek_cert: Certificate,
 ) -> anyhow::Result<String> {
     let vek_type = "vcek";
-    let sign_type = "asvk";
+    let sign_type = "ask";
 
     let ark = ca_chain.ark;
     let ask = ca_chain.ask;
@@ -93,13 +93,12 @@ pub fn validate_certificate_chain(
 
     let mut log = String::new();
 
-    // Verify each signature and print result in console
     match (&ark, &ark).verify() {
         Ok(()) => {
             log.push_str("The AMD ARK was self-signed!\n");
         }
         Err(e) => match e.kind() {
-            ErrorKind::Other => return Err(anyhow::anyhow!("The AMD ARK is not self-signed!")),
+            ErrorKind::Other => return Err(anyhow::anyhow!("The AMD ARK is not self-signed! {e}")),
             _ => {
                 return Err(anyhow::anyhow!(
                     "Failed to verify the ARK cerfificate: {:?}",
