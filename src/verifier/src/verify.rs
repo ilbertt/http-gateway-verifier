@@ -31,10 +31,10 @@ pub async fn verify(args: VerifyArgs) -> anyhow::Result<String> {
     ic_cdk::println!("Downloaded report: {report}");
 
     let ca_chain = download_certificate_authority_chain(&report).await?;
-    ic_cdk::println!("Downloaded certificate authority chain: {ca_chain:?}");
+    ic_cdk::println!("Downloaded certificate authority chain");
 
     let vcek = download_vcek(&report).await?;
-    ic_cdk::println!("Downloaded vcek: {vcek:?}");
+    ic_cdk::println!("Downloaded vcek");
 
     let mut log = String::new();
 

@@ -188,7 +188,7 @@ pub async fn download_certificate_authority_chain(
         }),
     })
     .await
-    .map_err(|e| anyhow!("Failed to fetch report: url: {url}, {e}"))?;
+    .map_err(|e| anyhow!("Failed to fetch certificate authority chain: url: {url}, {e}"))?;
 
     parse_two_pem_certs(&res.body)
 }
@@ -197,7 +197,7 @@ fn parse_two_pem_certs(input: &[u8]) -> anyhow::Result<CaChain> {
     let (rem, ark) = parse_x509_pem(input)?;
     let (_, ask) = parse_x509_pem(rem)?;
 
-    Ok(CaChain::from_pem(&ark.contents, &ask.contents)?)
+    Ok(CaChain::from_der(&ark.contents, &ask.contents)?)
 }
 
 #[ic_cdk::query]
@@ -293,9 +293,9 @@ pub async fn download_vcek(report: &AttestationReport) -> anyhow::Result<Certifi
         }),
     })
     .await
-    .map_err(|e| anyhow!("Failed to fetch report: url: {url}, {e}"))?;
+    .map_err(|e| anyhow!("Failed to fetch vcek: url: {url}, {e}"))?;
 
-    Ok(Certificate::from_pem(&res.body)?)
+    Ok(Certificate::from_der(&res.body)?)
 }
 
 #[ic_cdk::query]
