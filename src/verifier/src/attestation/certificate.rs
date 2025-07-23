@@ -1,10 +1,26 @@
-use std::io::ErrorKind;
+use std::{any::type_name_of_val, io::ErrorKind};
 
-use sev::{
-    certs::snp::{Certificate, Chain, Verifiable},
-    firmware::host::CertType,
+use anyhow::anyhow;
+use ic_cdk::{
+    api::canister_self,
+    management_canister::{
+        http_request, HttpMethod, HttpRequestArgs, HttpRequestResult, TransformArgs,
+        TransformContext, TransformFunc,
+    },
 };
-use x509_parser::{prelude::X509Extension, x509::X509Name};
+use sev::{
+    certs::snp::{ca::Chain as CaChain, Certificate, Chain, Verifiable},
+    firmware::{guest::AttestationReport, host::CertType},
+};
+use x509_parser::{nom::AsBytes, pem::parse_x509_pem, prelude::X509Extension, x509::X509Name};
+
+use crate::attestation::{
+    endorsement::Endorsement,
+    processor::{get_processor_model, ProcType},
+};
+
+/// 5kB
+const MAX_CERTIFICATE_CHAIN_SIZE_BYTES: u64 = 5_000;
 
 pub(super) fn parse_common_name(field: &X509Name<'_>) -> anyhow::Result<CertType> {
     if let Some(val) = field
@@ -65,18 +81,17 @@ pub(super) fn check_cert_bytes(ext: &X509Extension, val: &[u8]) -> bool {
 }
 
 pub fn validate_certificate_chain(
-    ark_bytes: &[u8],
-    ask_bytes: &[u8],
-    vcek_bytes: &[u8],
+    ca_chain: CaChain,
+    vcek_cert: Certificate,
 ) -> anyhow::Result<String> {
     let vek_type = "vcek";
     let sign_type = "asvk";
-    let ark_cert = Certificate::from_pem(ark_bytes)?;
-    let ask_cert = Certificate::from_pem(ask_bytes)?;
-    let vcek_cert = Certificate::from_pem(vcek_bytes)?;
 
     // Get a cert chain from directory
-    let cert_chain: Chain = (ask_cert, ark_cert, vcek_cert).into();
+    let cert_chain = Chain {
+        ca: ca_chain,
+        vek: vcek_cert,
+    };
 
     let ark = cert_chain.ca.ark;
     let ask = cert_chain.ca.ask;
@@ -139,4 +154,163 @@ pub fn validate_certificate_chain(
     }
 
     Ok(log)
+}
+
+fn certificate_authority_chain_url(processor_model: &ProcType, endorser: &Endorsement) -> String {
+    const KDS_CERT_SITE: &str = "https://kdsintf.amd.com";
+    const KDS_CERT_CHAIN: &str = "cert_chain";
+
+    format!(
+        "{KDS_CERT_SITE}/{}/v1/{}/{KDS_CERT_CHAIN}",
+        endorser.to_string().to_lowercase(),
+        processor_model.to_kds_url()
+    )
+}
+
+pub async fn download_certificate_authority_chain(
+    report: &AttestationReport,
+) -> anyhow::Result<CaChain> {
+    let processor_model = get_processor_model(report)?;
+    let url = certificate_authority_chain_url(&processor_model, &Endorsement::Vcek);
+
+    let res = http_request(&HttpRequestArgs {
+        url: url.clone(),
+        method: HttpMethod::GET,
+        headers: vec![],
+        body: None,
+        max_response_bytes: Some(MAX_CERTIFICATE_CHAIN_SIZE_BYTES),
+        transform: Some(TransformContext {
+            function: TransformFunc::new(
+                canister_self(),
+                http_outcall_certificate_authority_chain_transform_function_name(),
+            ),
+            context: vec![],
+        }),
+    })
+    .await
+    .map_err(|e| anyhow!("Failed to fetch report: url: {url}, {e}"))?;
+
+    parse_two_pem_certs(&res.body)
+}
+
+fn parse_two_pem_certs(input: &[u8]) -> anyhow::Result<CaChain> {
+    let (rem, ark) = parse_x509_pem(input)?;
+    let (_, ask) = parse_x509_pem(rem)?;
+
+    Ok(CaChain::from_pem(&ark.contents, &ask.contents)?)
+}
+
+#[ic_cdk::query]
+fn http_outcall_transform_certificate_authority_chain_response(
+    args: TransformArgs,
+) -> HttpRequestResult {
+    HttpRequestResult {
+        status: args.response.status,
+        headers: vec![],
+        body: args.response.body,
+    }
+}
+
+fn http_outcall_certificate_authority_chain_transform_function_name() -> String {
+    type_name_of_val(&http_outcall_transform_certificate_authority_chain_response)
+        .split("::")
+        .last()
+        .unwrap()
+        .to_string()
+}
+
+fn vcek_url(report: &AttestationReport) -> anyhow::Result<String> {
+    const KDS_CERT_SITE: &str = "https://kdsintf.amd.com";
+    const KDS_VCEK: &str = "/vcek/v1";
+
+    let processor_model = get_processor_model(report)?;
+
+    // Get hardware id
+    let hw_id: String = if report.chip_id.as_bytes() != [0; 64] {
+        match processor_model {
+            ProcType::Turin => {
+                let shorter_bytes: &[u8] = &report.chip_id[0..8];
+                hex::encode(shorter_bytes)
+            }
+            _ => hex::encode(report.chip_id),
+        }
+    } else {
+        return Err(anyhow::anyhow!(
+            "Hardware ID is 0s on attestation report. Confirm that MASK_CHIP_ID is set to 0."
+        ));
+    };
+
+    // Request VCEK from KDS
+    let vcek_url = match processor_model {
+        ProcType::Turin => {
+            let fmc = if let Some(fmc) = report.reported_tcb.fmc {
+                fmc
+            } else {
+                return Err(anyhow::anyhow!("A Turin processor must have a fmc value"));
+            };
+            format!(
+                "{KDS_CERT_SITE}{KDS_VCEK}/{}/\
+                {hw_id}?fmcSPL={:02}&blSPL={:02}&teeSPL={:02}&snpSPL={:02}&ucodeSPL={:02}",
+                processor_model.to_kds_url(),
+                fmc,
+                report.reported_tcb.bootloader,
+                report.reported_tcb.tee,
+                report.reported_tcb.snp,
+                report.reported_tcb.microcode
+            )
+        }
+        _ => {
+            format!(
+                "{KDS_CERT_SITE}{KDS_VCEK}/{}/\
+                {hw_id}?blSPL={:02}&teeSPL={:02}&snpSPL={:02}&ucodeSPL={:02}",
+                processor_model.to_kds_url(),
+                report.reported_tcb.bootloader,
+                report.reported_tcb.tee,
+                report.reported_tcb.snp,
+                report.reported_tcb.microcode
+            )
+        }
+    };
+
+    Ok(vcek_url)
+}
+
+pub async fn download_vcek(report: &AttestationReport) -> anyhow::Result<Certificate> {
+    let url = vcek_url(report)?;
+
+    let res = http_request(&HttpRequestArgs {
+        url: url.clone(),
+        method: HttpMethod::GET,
+        headers: vec![],
+        body: None,
+        max_response_bytes: Some(MAX_CERTIFICATE_CHAIN_SIZE_BYTES),
+        transform: Some(TransformContext {
+            function: TransformFunc::new(
+                canister_self(),
+                http_outcall_vcek_transform_function_name(),
+            ),
+            context: vec![],
+        }),
+    })
+    .await
+    .map_err(|e| anyhow!("Failed to fetch report: url: {url}, {e}"))?;
+
+    Ok(Certificate::from_pem(&res.body)?)
+}
+
+#[ic_cdk::query]
+fn http_outcall_transform_vcek_response(args: TransformArgs) -> HttpRequestResult {
+    HttpRequestResult {
+        status: args.response.status,
+        headers: vec![],
+        body: args.response.body,
+    }
+}
+
+fn http_outcall_vcek_transform_function_name() -> String {
+    type_name_of_val(&http_outcall_transform_vcek_response)
+        .split("::")
+        .last()
+        .unwrap()
+        .to_string()
 }

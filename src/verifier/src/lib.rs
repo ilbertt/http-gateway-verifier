@@ -20,8 +20,8 @@ fn post_upgrade(args: Option<assets::AssetCanisterArgs>) {
 }
 
 #[ic_cdk::update]
-fn verify(args: verify::VerifyArgs) {
-    verify::verify(args).unwrap();
+async fn verify(args: verify::VerifyArgs) {
+    verify::verify(args).await.unwrap();
 }
 
 // Workaround to avoid using the system random number generator, which is not available in the canister.

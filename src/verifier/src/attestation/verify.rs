@@ -153,7 +153,6 @@ fn verify_attestation_signature(
     att_report: AttestationReport,
     mut log: Option<&mut String>,
 ) -> anyhow::Result<()> {
-    // Verify signature
     (&vcek, &att_report)
         .verify()
         .context("Failed to verify attestation report signature with VEK public key.")?;
@@ -164,27 +163,22 @@ fn verify_attestation_signature(
     Ok(())
 }
 
-pub fn verify_attestation(report_bytes: &[u8], vlek_bytes: &[u8]) -> anyhow::Result<String> {
-    let attestation_report = AttestationReport::from_bytes(report_bytes)?;
-    let processor_model = get_processor_model(attestation_report)?;
-    let vlek_cert = Certificate::from_pem(vlek_bytes)?;
+pub fn verify_attestation(report: AttestationReport, vcek: Certificate) -> anyhow::Result<String> {
+    let processor_model = get_processor_model(&report)?;
 
     let mut log = String::new();
 
-    verify_attestation_tcb(
-        vlek_cert.clone(),
-        attestation_report,
-        processor_model,
-        Some(&mut log),
-    )?;
-    verify_attestation_signature(vlek_cert, attestation_report, Some(&mut log))?;
+    verify_attestation_tcb(vcek.clone(), report, processor_model, Some(&mut log))?;
+    verify_attestation_signature(vcek, report, Some(&mut log))?;
 
     Ok(log)
 }
 
-pub fn verify_report_data(report_bytes: &[u8], report_data: &[u8]) -> anyhow::Result<String> {
-    let attestation_report = AttestationReport::from_bytes(report_bytes)?;
-    if attestation_report.report_data.as_slice() == report_data {
+pub fn verify_report_data(
+    report: &AttestationReport,
+    report_data: &[u8],
+) -> anyhow::Result<String> {
+    if report.report_data.as_slice() == report_data {
         Ok("Report data matches!".to_string())
     } else {
         Err(anyhow::anyhow!("Report data does not match"))

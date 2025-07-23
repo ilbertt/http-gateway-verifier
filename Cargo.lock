@@ -670,6 +670,7 @@ dependencies = [
  "anyhow",
  "candid",
  "getrandom",
+ "hex",
  "ic-cdk",
  "ic-certified-assets",
  "num-traits",

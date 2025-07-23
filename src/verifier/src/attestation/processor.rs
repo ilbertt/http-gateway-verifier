@@ -19,6 +19,16 @@ pub(super) enum ProcType {
     Turin,
 }
 
+impl ProcType {
+    pub(super) fn to_kds_url(&self) -> String {
+        match self {
+            ProcType::Genoa | ProcType::Siena | ProcType::Bergamo => &ProcType::Genoa,
+            _ => self,
+        }
+        .to_string()
+    }
+}
+
 impl std::fmt::Display for ProcType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
@@ -31,7 +41,7 @@ impl std::fmt::Display for ProcType {
     }
 }
 
-pub(super) fn get_processor_model(att_report: AttestationReport) -> anyhow::Result<ProcType> {
+pub(super) fn get_processor_model(att_report: &AttestationReport) -> anyhow::Result<ProcType> {
     if att_report.version < 3 {
         if [0u8; 64] == *att_report.chip_id {
             return Err(anyhow::anyhow!(

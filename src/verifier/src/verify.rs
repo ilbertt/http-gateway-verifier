@@ -1,21 +1,60 @@
 use candid::{CandidType, Deserialize};
+use serde_bytes::ByteBuf;
+use sev::firmware::guest::AttestationReport;
 
-use crate::assets::retrieve_asset_bytes;
+use crate::{
+    assets::retrieve_asset_bytes,
+    attestation::{
+        download_certificate_authority_chain, download_report, download_vcek,
+        validate_certificate_chain, verify_attestation, verify_report_data,
+    },
+};
 
 #[derive(CandidType, Deserialize)]
 pub struct VerifyArgs {
     release_short_hash: String,
+    gateway_host: String,
+    report_data: Option<ByteBuf>,
 }
 
 /// Steps:
 /// 1. load release assets from assets state
-/// 2. fetch certificate chain based on args
-/// 3. fetch report based on args
+/// 2. fetch report based on args
+/// 3. fetch certificate chain based on report
 /// 4. verify certificate chain
 /// 5. verify report
 /// 6. compare report's measurement with release assets calculation
-pub fn verify(args: VerifyArgs) -> anyhow::Result<()> {
-    collect_release_assets(&args.release_short_hash)
+pub async fn verify(args: VerifyArgs) -> anyhow::Result<String> {
+    collect_release_assets(&args.release_short_hash)?;
+
+    let report = fetch_report(&args).await?;
+    ic_cdk::println!("Downloaded report: {report}");
+
+    let ca_chain = download_certificate_authority_chain(&report).await?;
+    ic_cdk::println!("Downloaded certificate authority chain: {ca_chain:?}");
+
+    let vcek = download_vcek(&report).await?;
+    ic_cdk::println!("Downloaded vcek: {vcek:?}");
+
+    let mut log = String::new();
+
+    let l = validate_certificate_chain(ca_chain, vcek.clone())?;
+    ic_cdk::println!("{l}");
+    log.push_str(&l);
+
+    let l = verify_attestation(report, vcek)?;
+    ic_cdk::println!("{l}");
+    log.push_str(&l);
+
+    if let Some(report_data) = args.report_data {
+        let l = verify_report_data(&report, &report_data)?;
+        ic_cdk::println!("{l}");
+        log.push_str(&l);
+    }
+
+    // TODO: verify measure
+
+    Ok(log)
 }
 
 fn initramfs_path(release_short_hash: &str) -> String {
@@ -43,4 +82,13 @@ fn collect_release_assets(release_short_hash: &str) -> anyhow::Result<()> {
     );
 
     Ok(())
+}
+
+async fn fetch_report(args: &VerifyArgs) -> anyhow::Result<AttestationReport> {
+    let mut report_data = [0u8; 64];
+    if let Some(rd) = &args.report_data {
+        report_data.copy_from_slice(rd.as_slice());
+    }
+
+    download_report(&args.gateway_host, &report_data).await
 }

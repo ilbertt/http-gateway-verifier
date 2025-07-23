@@ -1,8 +1,11 @@
 mod certificate;
-mod display;
+mod endorsement;
 mod processor;
+mod report;
 mod verify;
 
-pub use certificate::validate_certificate_chain;
-pub use display::display_report;
+pub use certificate::{
+    download_certificate_authority_chain, download_vcek, validate_certificate_chain,
+};
+pub use report::download_report;
 pub use verify::{verify_attestation, verify_report_data};

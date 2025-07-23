@@ -1,7 +1,9 @@
 type VerifyArgs = record {
-    release_short_hash : text
+    release_short_hash : text;
+    gateway_host : text;
+    report_data : opt blob
 }
 
 service : {
-    "verify" : (VerifyArgs) -> ()
+    "verify" : (VerifyArgs) -> (text)
 }

@@ -24,6 +24,7 @@ anyhow = "1.0"
 x509-parser = { version = "0.16.0", features = ["verify"] }
 
 num-traits = "0.2"
+hex = "0.4"
 
 # We need this to override the system random number generator, which is not available in the canister.
 getrandom = { version = "0.2", features = ["custom"] }

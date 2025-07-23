@@ -17,7 +17,7 @@
 # │  ├─ OVMF.fd
 # │  ├─ vmlinuz
 # ...
-icx-asset --pem ./identity.pem sync uxrrr-q7777-77774-qaaaq-cai ./data
+icx-asset --pem ./data/identity.pem sync uxrrr-q7777-77774-qaaaq-cai ./data/release-assets
 
 # Just to confirm that we have loaded all the release assets in the canister
-icx-asset --pem ./identity.pem ls uxrrr-q7777-77774-qaaaq-cai
+icx-asset --pem ./data/identity.pem ls uxrrr-q7777-77774-qaaaq-cai
