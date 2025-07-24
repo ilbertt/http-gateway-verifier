@@ -13,7 +13,7 @@ dfx canister call --ic 5slwp-diaaa-aaaae-abl7a-cai verify
 You will be prompted to insert three fields:
 
 -   `gateway_host` (string): the HTTP Gateway you want to obtain the attestation from. You can choose one from [SEV-SNP-enabled HTTP Gateways](https://github.com/dfinity/http-gateway-release/blob/main/attestation-guide.md#sev-snp-enabled-http-gateways).
--   `report_data` (bytes, optional): The data you want to include in the report, in order to verify that the report is fresh.
+-   `report_data` (bytes, optional): The data you want to include in the report, in order to verify that the report is fresh. Must be 64 bytes long.
 -   `release_hash` (string, optional): The GitHub release hash under which you have uploaded the release assets. See [Uploading Release Assets](#uploading-release-assets) for more details. _**Note**: the measurement verification using the release assets is not implemented yet._
 
 ### Uploading Release Assets
@@ -40,8 +40,8 @@ dfx identity remove temp
 Then, make sure you have permissions to upload assets to the canister (**Note**: you need to be a controller of the canister to make these commands work):
 
 ```shell
-dfx canister call --ic verifier grant_permission '(record { to_principal = principal "<principal-id-obtained-above>"; permission = variant { Prepare } })'
-dfx canister call --ic verifier grant_permission '(record { to_principal = principal "<principal-id-obtained-above>"; permission = variant { Commit } })'
+dfx canister call --ic 5slwp-diaaa-aaaae-abl7a-cai grant_permission '(record { to_principal = principal "<principal-id-obtained-above>"; permission = variant { Prepare } })'
+dfx canister call --ic 5slwp-diaaa-aaaae-abl7a-cai grant_permission '(record { to_principal = principal "<principal-id-obtained-above>"; permission = variant { Commit } })'
 ```
 
 #### Upload
