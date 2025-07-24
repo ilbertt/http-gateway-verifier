@@ -2,7 +2,7 @@ mod assets;
 mod attestation;
 mod verify;
 
-use ic_cdk::{init, post_upgrade, pre_upgrade};
+use ic_cdk::{init, post_upgrade, pre_upgrade, update};
 
 #[init]
 fn init(args: Option<assets::AssetCanisterArgs>) {
@@ -19,7 +19,7 @@ fn post_upgrade(args: Option<assets::AssetCanisterArgs>) {
     assets::post_upgrade(args);
 }
 
-#[ic_cdk::update]
+#[update]
 async fn verify(args: verify::VerifyArgs) -> String {
     verify::verify(args).await.unwrap()
 }
