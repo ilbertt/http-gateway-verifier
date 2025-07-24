@@ -14,7 +14,7 @@ You will be prompted to insert three fields:
 
 -   `gateway_host` (string): the HTTP Gateway you want to obtain the attestation from. You can choose one from [SEV-SNP-enabled HTTP Gateways](https://github.com/dfinity/http-gateway-release/blob/main/attestation-guide.md#sev-snp-enabled-http-gateways).
 -   `report_data` (bytes, optional): The data you want to include in the report, in order to verify that the report is fresh.
--   `release_hash` (string, optional): The GitHub release hash under which you have uploaded the release assets. See [Uploading Release Assets](#uploading-release-assets) for more details.
+-   `release_hash` (string, optional): The GitHub release hash under which you have uploaded the release assets. See [Uploading Release Assets](#uploading-release-assets) for more details. _**Note**: the measurement verification using the release assets is not implemented yet._
 
 ### Uploading Release Assets
 
@@ -60,11 +60,9 @@ Then, you must upload the release assets to the canister. You can use the [`sync
 CANISTER_ID=5slwp-diaaa-aaaae-abl7a-cai IC_NETWORK=https://icp-api.io ./scripts/sync_release_assets.sh
 ```
 
-This command _syncs_ the content of the `data/release-assets` folder with the canister assets. You may lose data.
+**Note:**: This command _syncs_ the content of the `data/release-assets` folder with the canister assets. You may lose data.
 
-You can now pass the release hash (in this example, `fc59bee487054539d1b76fdd7962274fe3393822`) to the canister's verify argument.
-
-> Note: the measurement verification using the release assets is not implemented yet.
+You can now pass the release hash (in this example, `fc59bee487054539d1b76fdd7962274fe3393822`) to the canister's `verify` method argument.
 
 ## Development
 
