@@ -60,7 +60,7 @@ Then, you must upload the release assets to the canister. You can use the [`sync
 CANISTER_ID=5slwp-diaaa-aaaae-abl7a-cai IC_NETWORK=https://icp-api.io ./scripts/sync_release_assets.sh
 ```
 
-**Note:**: This command _syncs_ the content of the `data/release-assets` folder with the canister assets. You may lose data.
+> **Note**: This command _syncs_ the content of the `data/release-assets` folder with the canister assets. You may lose data.
 
 You can now pass the release hash (in this example, `fc59bee487054539d1b76fdd7962274fe3393822`) to the canister's `verify` method argument.
 
