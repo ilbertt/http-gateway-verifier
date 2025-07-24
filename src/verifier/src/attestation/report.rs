@@ -15,7 +15,7 @@ const MAX_REPORT_SIZE_BYTES: u64 = 2_000;
 
 type ReportData = [u8; 64];
 
-fn report_url(gateway_host: &str) -> String {
+fn http_gateway_report_url(gateway_host: &str) -> String {
     format!("https://{gateway_host}/sev-snp/report")
 }
 
@@ -23,7 +23,7 @@ pub async fn download_report(
     gateway_host: &str,
     report_data: &ReportData,
 ) -> anyhow::Result<AttestationReport> {
-    let url = report_url(gateway_host);
+    let url = http_gateway_report_url(gateway_host);
 
     let res = http_request(&HttpRequestArgs {
         url: url.clone(),
