@@ -22,6 +22,8 @@ use crate::attestation::{
 /// 5kB
 const MAX_CERTIFICATE_CHAIN_SIZE_BYTES: u64 = 5_000;
 
+const KDS_CERT_SITE: &str = "https://kdsintf.amd.com";
+
 pub(super) fn parse_common_name(field: &X509Name<'_>) -> anyhow::Result<CertType> {
     if let Some(val) = field
         .iter_common_name()
@@ -80,16 +82,9 @@ pub(super) fn check_cert_bytes(ext: &X509Extension, val: &[u8]) -> bool {
     }
 }
 
-pub fn validate_certificate_chain(
-    ca_chain: CaChain,
-    vcek_cert: Certificate,
-) -> anyhow::Result<String> {
-    let vek_type = "vcek";
-    let sign_type = "ask";
-
+pub fn validate_certificate_chain(ca_chain: CaChain, vek: Certificate) -> anyhow::Result<String> {
     let ark = ca_chain.ark;
     let ask = ca_chain.ask;
-    let vek = vcek_cert;
 
     let mut log = String::new();
 
@@ -101,7 +96,7 @@ pub fn validate_certificate_chain(
             ErrorKind::Other => return Err(anyhow::anyhow!("The AMD ARK is not self-signed! {e}")),
             _ => {
                 return Err(anyhow::anyhow!(
-                    "Failed to verify the ARK cerfificate: {:?}",
+                    "Failed to verify the ARK certificate: {:?}",
                     e
                 ))
             }
@@ -110,16 +105,12 @@ pub fn validate_certificate_chain(
 
     match (&ark, &ask).verify() {
         Ok(()) => {
-            log.push_str(&format!(
-                "The AMD {} was signed by the AMD ARK!\n",
-                sign_type.to_uppercase(),
-            ));
+            log.push_str(&format!("The AMD ASK was signed by the AMD ARK!\n"));
         }
         Err(e) => match e.kind() {
             ErrorKind::Other => {
                 return Err(anyhow::anyhow!(
-                    "The AMD {} was not signed by the AMD ARK!",
-                    sign_type.to_uppercase()
+                    "The AMD ASK was not signed by the AMD ARK!"
                 ))
             }
             _ => return Err(anyhow::anyhow!("Failed to verify ASK certificate: {:?}", e)),
@@ -128,19 +119,11 @@ pub fn validate_certificate_chain(
 
     match (&ask, &vek).verify() {
         Ok(()) => {
-            log.push_str(&format!(
-                "The {} was signed by the AMD {}!\n",
-                vek_type.to_uppercase(),
-                sign_type.to_uppercase()
-            ));
+            log.push_str(&format!("The VCEK was signed by the AMD ASK!\n",));
         }
         Err(e) => match e.kind() {
             ErrorKind::Other => {
-                return Err(anyhow::anyhow!(
-                    "The {} was not signed by the AMD {}!",
-                    vek_type.to_uppercase(),
-                    sign_type.to_uppercase(),
-                ))
+                return Err(anyhow::anyhow!("The VCEK was not signed by the AMD ASK!",))
             }
             _ => return Err(anyhow::anyhow!("Failed to verify VEK certificate: {:?}", e)),
         },
@@ -150,7 +133,6 @@ pub fn validate_certificate_chain(
 }
 
 fn certificate_authority_chain_url(processor_model: &ProcType, endorser: &Endorsement) -> String {
-    const KDS_CERT_SITE: &str = "https://kdsintf.amd.com";
     const KDS_CERT_CHAIN: &str = "cert_chain";
 
     format!(
@@ -187,8 +169,8 @@ pub async fn download_certificate_authority_chain(
 }
 
 fn parse_two_pem_certs(input: &[u8]) -> anyhow::Result<CaChain> {
-    let (rem, ark) = parse_x509_pem(input)?;
-    let (_, ask) = parse_x509_pem(rem)?;
+    let (rem, ask) = parse_x509_pem(input)?;
+    let (_, ark) = parse_x509_pem(rem)?;
 
     Ok(CaChain::from_der(&ark.contents, &ask.contents)?)
 }
@@ -213,7 +195,6 @@ fn http_outcall_certificate_authority_chain_transform_function_name() -> String 
 }
 
 fn vcek_url(report: &AttestationReport) -> anyhow::Result<String> {
-    const KDS_CERT_SITE: &str = "https://kdsintf.amd.com";
     const KDS_VCEK: &str = "/vcek/v1";
 
     let processor_model = get_processor_model(report)?;
