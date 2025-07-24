@@ -12,8 +12,8 @@ use crate::{
 
 #[derive(CandidType, Deserialize)]
 pub struct VerifyArgs {
-    release_short_hash: String,
     gateway_host: String,
+    release_hash: Option<String>,
     report_data: Option<ByteBuf>,
 }
 
@@ -25,8 +25,6 @@ pub struct VerifyArgs {
 /// 5. verify report
 /// 6. compare report's measurement with release assets calculation
 pub async fn verify(args: VerifyArgs) -> anyhow::Result<String> {
-    collect_release_assets(&args.release_short_hash)?;
-
     let report = fetch_report(&args).await?;
     ic_cdk::println!("Downloaded report: {report}");
 
@@ -52,36 +50,48 @@ pub async fn verify(args: VerifyArgs) -> anyhow::Result<String> {
         log.push_str(&l);
     }
 
-    // TODO: verify measure
+    if let Some(release_hash) = &args.release_hash {
+        let assets = collect_release_assets(release_hash)?;
+        ic_cdk::println!(
+            "initramfs len: {}, ovmf len: {}, vmlinuz len: {}",
+            assets.initramfs.len(),
+            assets.ovmf.len(),
+            assets.vmlinuz.len()
+        );
+        todo!("Implement measure verification")
+    }
 
     Ok(log)
 }
 
-fn initramfs_path(release_short_hash: &str) -> String {
-    format!("/{release_short_hash}/initramfs.cpio.gz")
+fn initramfs_path(release_hash: &str) -> String {
+    format!("/{release_hash}/initramfs.cpio.gz")
 }
 
-fn ovmf_path(release_short_hash: &str) -> String {
-    format!("/{release_short_hash}/OVMF.fd")
+fn ovmf_path(release_hash: &str) -> String {
+    format!("/{release_hash}/OVMF.fd")
 }
 
-fn vmlinuz_path(release_short_hash: &str) -> String {
-    format!("/{release_short_hash}/vmlinuz")
+fn vmlinuz_path(release_hash: &str) -> String {
+    format!("/{release_hash}/vmlinuz")
 }
 
-fn collect_release_assets(release_short_hash: &str) -> anyhow::Result<()> {
-    let initramfs_bytes = retrieve_asset_bytes(initramfs_path(release_short_hash))?;
-    let ovmf_bytes = retrieve_asset_bytes(ovmf_path(release_short_hash))?;
-    let vmlinuz_bytes = retrieve_asset_bytes(vmlinuz_path(release_short_hash))?;
+struct ReleaseAssets {
+    initramfs: ByteBuf,
+    ovmf: ByteBuf,
+    vmlinuz: ByteBuf,
+}
 
-    ic_cdk::println!(
-        "initramfs len: {}, ovmf len: {}, vmlinuz len: {}",
-        initramfs_bytes.len(),
-        ovmf_bytes.len(),
-        vmlinuz_bytes.len()
-    );
+fn collect_release_assets(release_hash: &str) -> anyhow::Result<ReleaseAssets> {
+    let initramfs = retrieve_asset_bytes(initramfs_path(release_hash))?;
+    let ovmf = retrieve_asset_bytes(ovmf_path(release_hash))?;
+    let vmlinuz = retrieve_asset_bytes(vmlinuz_path(release_hash))?;
 
-    Ok(())
+    Ok(ReleaseAssets {
+        initramfs: ByteBuf::from(initramfs.as_ref()),
+        ovmf: ByteBuf::from(ovmf.as_ref()),
+        vmlinuz: ByteBuf::from(vmlinuz.as_ref()),
+    })
 }
 
 async fn fetch_report(args: &VerifyArgs) -> anyhow::Result<AttestationReport> {

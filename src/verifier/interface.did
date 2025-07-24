@@ -1,6 +1,6 @@
 type VerifyArgs = record {
-    release_short_hash : text;
     gateway_host : text;
+    release_hash : opt text;
     report_data : opt blob
 }
 

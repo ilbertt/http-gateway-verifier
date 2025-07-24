@@ -1,61 +1,80 @@
 # `http-gateway-verifier`
 
-Welcome to your new `http-gateway-verifier` project and to the Internet Computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+A canister to verify HTTP Gateways SEV-SNP attestations.
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+## Usage
 
-To learn more before you start working with `http-gateway-verifier`, see the following documentation available online:
+A version of this canister is available on mainnet, with canister ID [`5slwp-diaaa-aaaae-abl7a-cai`](https://dashboard.internetcomputer.org/canister/5slwp-diaaa-aaaae-abl7a-cai). You can interact with it using its [Candid UI](https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=5slwp-diaaa-aaaae-abl7a-cai) or with the command:
 
-- [Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
-- [SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
-- [Rust Canister Development Guide](https://internetcomputer.org/docs/current/developer-docs/backend/rust/)
-- [ic-cdk](https://docs.rs/ic-cdk)
-- [ic-cdk-macros](https://docs.rs/ic-cdk-macros)
-- [Candid Introduction](https://internetcomputer.org/docs/current/developer-docs/backend/candid/)
-
-If you want to start working on your project right away, you might want to try the following commands:
-
-```bash
-cd http-gateway-verifier/
-dfx help
-dfx canister --help
+```shell
+dfx canister call --ic 5slwp-diaaa-aaaae-abl7a-cai verify
 ```
 
-## Running the project locally
+You will be prompted to insert three fields:
 
-If you want to test your project locally, you can use the following commands:
+-   `gateway_host` (string): the HTTP Gateway you want to obtain the attestation from. You can choose one from [SEV-SNP-enabled HTTP Gateways](https://github.com/dfinity/http-gateway-release/blob/main/attestation-guide.md#sev-snp-enabled-http-gateways).
+-   `report_data` (bytes, optional): The data you want to include in the report, in order to verify that the report is fresh.
+-   `release_hash` (string, optional): The GitHub release hash under which you have uploaded the release assets. See [Uploading Release Assets](#uploading-release-assets) for more details.
 
-```bash
-# Starts the replica, running in the background
-dfx start --background
+### Uploading Release Assets
 
-# Deploys your canisters to the replica and generates your candid interface
-dfx deploy
+The GitHub Release assets are needed in order to verify that the measurement in the report matches the measurement calculated from the assets. This way, you can verify that the HTTP Gateway was started with that initial state (memory and operative system).
+
+#### Preparation
+
+Make sure you have [icx-asset](https://github.com/dfinity/sdk/blob/master/src/canisters/frontend/icx-asset/README.md) installed:
+
+```shell
+cargo install icx-asset
 ```
 
-Once the job completes, your application will be available at `http://localhost:4943?canisterId={asset_canister_id}`.
+Then, create an identity and save it in the `data` folder:
 
-If you have made changes to your backend canister, you can generate a new candid interface with
-
-```bash
-npm run generate
+```shell
+dfx identity new --storage-mode plaintext temp
+dfx identity --identity temp get-principal # make sure you save principal string returned by this command
+dfx identity export temp > ./data/identity.pem
+dfx identity remove temp
 ```
 
-at any time. This is recommended before starting the frontend development server, and will be run automatically any time you run `dfx deploy`.
+Then, make sure you have permissions to upload assets to the canister (**Note**: you need to be a controller of the canister to make these commands work):
 
-If you are making frontend changes, you can start a development server with
-
-```bash
-npm start
+```shell
+dfx canister call --ic verifier grant_permission '(record { to_principal = principal "<principal-id-obtained-above>"; permission = variant { Prepare } })'
+dfx canister call --ic verifier grant_permission '(record { to_principal = principal "<principal-id-obtained-above>"; permission = variant { Commit } })'
 ```
 
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 4943.
+#### Upload
 
-### Note on frontend environment variables
+First, you must download the following assets from the latest [HTTP Gateway GitHub release](https://github.com/dfinity/http-gateway-release/releases) and place them in the `data/release-assets/<release-commit-hash>`:
 
-If you are hosting frontend code somewhere without using DFX, you may need to make one of the following adjustments to ensure your project does not fetch the root key in production:
+-   `initramfs.cpio.gz`
+-   `OVMF.fd`
+-   `vmlinuz`
 
-- set`DFX_NETWORK` to `ic` if you are using Webpack
-- use your own preferred method to replace `process.env.DFX_NETWORK` in the autogenerated declarations
-  - Setting `canisters -> {asset_canister_id} -> declarations -> env_override to a string` in `dfx.json` will replace `process.env.DFX_NETWORK` with the string in the autogenerated declarations
-- Write your own `createActor` constructor
+For example, for release [fc59bee](https://github.com/dfinity/http-gateway-release/releases/tag/fc59bee) you will download those assets into the `data/release-assets/fc59bee487054539d1b76fdd7962274fe3393822` folder.
+
+Then, you must upload the release assets to the canister. You can use the [`sync_release_assets.sh`](./scripts/sync_release_assets.sh) script (which assumes that the [Preparation](#preparation) step has been completed):
+
+```shell
+CANISTER_ID=5slwp-diaaa-aaaae-abl7a-cai IC_NETWORK=https://icp-api.io ./scripts/sync_release_assets.sh
+```
+
+This command _syncs_ the content of the `data/release-assets` folder with the canister assets. You may lose data.
+
+You can now pass the release hash (in this example, `fc59bee487054539d1b76fdd7962274fe3393822`) to the canister's verify argument.
+
+> Note: the measurement verification using the release assets is not implemented yet.
+
+## Development
+
+You can run a local instance of the verifier canister by simply running these commands in two separate terminals:
+
+```shell
+# In the first terminal (omit the --clean flag if you want to use the canister state from a previous run, not recommended)
+dfx start --clean
+# In the second terminal
+dfx deploy verifier
+```
+
+Then, you can follow [Usage](#usage) guide, replacing the canister ID with the one obtained in the output, removing the `--ic` flag from all the dfx commands and setting the `IC_NETWORK` env variable to `http://localhost:4943` where needed.
