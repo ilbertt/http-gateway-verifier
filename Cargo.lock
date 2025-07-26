@@ -677,6 +677,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "sev",
+ "sev-snp-measure",
  "x509-parser",
 ]
 
@@ -1438,6 +1439,21 @@ dependencies = [
  "static_assertions",
  "uuid",
  "x509-cert",
+]
+
+[[package]]
+name = "sev-snp-measure"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "bitfield",
+ "byteorder",
+ "hex",
+ "serde",
+ "serde-big-array",
+ "sev",
+ "sha2",
+ "uuid",
 ]
 
 [[package]]

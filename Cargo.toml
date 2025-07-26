@@ -1,3 +1,11 @@
 [workspace]
-members = ["src/verifier"]
+members = ["src/measure", "src/verifier"]
 resolver = "2"
+
+[workspace.dependencies]
+sev = { version = "6.2.1", default-features = false, features = [
+  "crypto_nossl",
+  "snp",
+] }
+serde = "1.0"
+hex = "0.4"

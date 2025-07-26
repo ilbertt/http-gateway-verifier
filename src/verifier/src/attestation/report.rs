@@ -39,6 +39,12 @@ pub async fn download_report(
     .await
     .map_err(|e| anyhow!("Failed to fetch report: url: {url}, {e}"))?;
 
+    ic_cdk::println!(
+        "res report: status: {} body len: {}",
+        res.status,
+        res.body.len()
+    );
+
     let report = AttestationReport::from_bytes(&res.body)?;
 
     Ok(report)

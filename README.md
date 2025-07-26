@@ -14,7 +14,7 @@ You will be prompted to insert three fields:
 
 -   `gateway_host` (string): the HTTP Gateway you want to obtain the attestation from. You can choose one from [SEV-SNP-enabled HTTP Gateways](https://github.com/dfinity/http-gateway-release/blob/main/attestation-guide.md#sev-snp-enabled-http-gateways).
 -   `report_data` (bytes, optional): The data you want to include in the report, in order to verify that the report is fresh. Must be 64 bytes long.
--   `release_hash` (string, optional): The GitHub release hash under which you have uploaded the release assets. See [Uploading Release Assets](#uploading-release-assets) for more details. _**Note**: the measurement verification using the release assets is not implemented yet._
+-   `release_hash` (string, optional): The GitHub release hash which corresponds to the path you have uploaded the release assets to. See [Uploading Release Assets](#uploading-release-assets) for more details.
 
 ### Uploading Release Assets
 

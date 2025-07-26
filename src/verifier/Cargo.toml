@@ -9,22 +9,21 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
+sev-snp-measure = { path = "../measure" }
+
 candid = "0.10"
 ic-cdk = "0.18"
 ic-certified-assets = "0.3"
 
-serde = "1.0"
+serde = { workspace = true }
 serde_bytes = "0.11"
 
-sev = { version = "6.2.1", default-features = false, features = [
-  "crypto_nossl",
-  "snp",
-] }
+sev = { workspace = true }
 anyhow = "1.0"
 x509-parser = { version = "0.16.0", features = ["verify"] }
 
 num-traits = "0.2"
-hex = "0.4"
+hex = { workspace = true }
 
 # We need this to override the system random number generator, which is not available in the canister.
 getrandom = { version = "0.2", features = ["custom"] }

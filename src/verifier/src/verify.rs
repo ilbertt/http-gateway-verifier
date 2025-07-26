@@ -6,7 +6,8 @@ use crate::{
     assets::retrieve_asset_bytes,
     attestation::{
         download_certificate_authority_chain, download_report, download_vcek,
-        validate_certificate_chain, verify_attestation, verify_report_data,
+        sev_snp_launch_digest, validate_certificate_chain, verify_attestation, verify_measurement,
+        verify_report_data, MeasurementArgs,
     },
 };
 
@@ -58,7 +59,15 @@ pub async fn verify(args: VerifyArgs) -> anyhow::Result<String> {
             assets.ovmf.len(),
             assets.vmlinuz.len()
         );
-        todo!("Implement measure verification")
+        let measurement = sev_snp_launch_digest(MeasurementArgs {
+            ovmf: assets.ovmf,
+            kernel: assets.vmlinuz,
+            initrd: assets.initramfs,
+        })?;
+
+        let l = verify_measurement(&report, measurement)?;
+        ic_cdk::println!("{l}");
+        log.push_str(&l);
     }
 
     Ok(log)

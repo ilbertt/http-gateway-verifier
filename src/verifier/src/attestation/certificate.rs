@@ -105,7 +105,7 @@ pub fn validate_certificate_chain(ca_chain: CaChain, vek: Certificate) -> anyhow
 
     match (&ark, &ask).verify() {
         Ok(()) => {
-            log.push_str(&format!("The AMD ASK was signed by the AMD ARK!\n"));
+            log.push_str("The AMD ASK was signed by the AMD ARK!\n");
         }
         Err(e) => match e.kind() {
             ErrorKind::Other => {
@@ -119,7 +119,7 @@ pub fn validate_certificate_chain(ca_chain: CaChain, vek: Certificate) -> anyhow
 
     match (&ask, &vek).verify() {
         Ok(()) => {
-            log.push_str(&format!("The VCEK was signed by the AMD ASK!\n",));
+            log.push_str("The VCEK was signed by the AMD ASK!\n");
         }
         Err(e) => match e.kind() {
             ErrorKind::Other => {
