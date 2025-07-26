@@ -2,6 +2,9 @@
 members = ["src/measure", "src/verifier"]
 resolver = "2"
 
+[workspace.package]
+edition = "2024"
+
 [workspace.dependencies]
 sev = { version = "6.2.1", default-features = false, features = [
   "crypto_nossl",
