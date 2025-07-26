@@ -4,13 +4,13 @@ use sev::{
     firmware::{guest::AttestationReport, host::CertType},
 };
 use x509_parser::{
-    der_parser::{oid, Oid},
+    der_parser::{Oid, oid},
     prelude::{FromDer, X509Certificate},
 };
 
 use super::{
     certificate::{check_cert_bytes, parse_common_name},
-    processor::{get_processor_model, ProcType},
+    processor::{ProcType, get_processor_model},
 };
 
 enum SnpOid {
@@ -26,12 +26,12 @@ enum SnpOid {
 impl SnpOid {
     fn oid(&self) -> Oid {
         match self {
-            SnpOid::BootLoader => oid!(1.3.6 .1 .4 .1 .3704 .1 .3 .1),
-            SnpOid::Tee => oid!(1.3.6 .1 .4 .1 .3704 .1 .3 .2),
-            SnpOid::Snp => oid!(1.3.6 .1 .4 .1 .3704 .1 .3 .3),
-            SnpOid::Ucode => oid!(1.3.6 .1 .4 .1 .3704 .1 .3 .8),
-            SnpOid::HwId => oid!(1.3.6 .1 .4 .1 .3704 .1 .4),
-            SnpOid::Fmc => oid!(1.3.6 .1 .4 .1 .3704 .1 .3 .9),
+            SnpOid::BootLoader => oid!(1.3.6.1.4.1.3704.1.3.1),
+            SnpOid::Tee => oid!(1.3.6.1.4.1.3704.1.3.2),
+            SnpOid::Snp => oid!(1.3.6.1.4.1.3704.1.3.3),
+            SnpOid::Ucode => oid!(1.3.6.1.4.1.3704.1.3.8),
+            SnpOid::HwId => oid!(1.3.6.1.4.1.3704.1.4),
+            SnpOid::Fmc => oid!(1.3.6.1.4.1.3704.1.3.9),
         }
     }
 }
@@ -130,8 +130,9 @@ fn verify_attestation_tcb(
                 fmc
             } else {
                 return Err(anyhow::anyhow!(
-                  "Attestation report TCB FMC is not present in the report. it is expecter for a {} model.", proc_model
-              ));
+                    "Attestation report TCB FMC is not present in the report. it is expecter for a {} model.",
+                    proc_model
+                ));
             };
 
             if !check_cert_bytes(cert_fmc, fmc.to_le_bytes().as_slice()) {

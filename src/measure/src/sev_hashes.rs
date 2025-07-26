@@ -9,7 +9,7 @@ use std::{
     str::FromStr,
 };
 
-use uuid::{uuid, Uuid};
+use uuid::{Uuid, uuid};
 
 use crate::util::hash::sha256;
 

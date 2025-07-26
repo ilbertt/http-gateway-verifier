@@ -4,8 +4,8 @@ use anyhow::anyhow;
 use ic_cdk::{
     api::canister_self,
     management_canister::{
-        http_request, HttpMethod, HttpRequestArgs, HttpRequestResult, TransformArgs,
-        TransformContext, TransformFunc,
+        HttpMethod, HttpRequestArgs, HttpRequestResult, TransformArgs, TransformContext,
+        TransformFunc, http_request,
     },
 };
 use sev::firmware::guest::AttestationReport;

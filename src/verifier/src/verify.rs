@@ -5,9 +5,9 @@ use sev::firmware::guest::AttestationReport;
 use crate::{
     assets::retrieve_asset_bytes,
     attestation::{
-        download_certificate_authority_chain, download_report, download_vcek,
+        MeasurementArgs, download_certificate_authority_chain, download_report, download_vcek,
         sev_snp_launch_digest, validate_certificate_chain, verify_attestation, verify_measurement,
-        verify_report_data, MeasurementArgs,
+        verify_report_data,
     },
 };
 

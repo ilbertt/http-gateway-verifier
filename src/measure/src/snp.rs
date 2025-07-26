@@ -4,7 +4,7 @@
 use crate::{
     gctx::{Gctx, Updating, VMSA_GPA},
     launch::PageType,
-    ovmf::{OvmfSevMetadataSectionDesc, SectionType, OVMF},
+    ovmf::{OVMF, OvmfSevMetadataSectionDesc, SectionType},
     sev_hashes::SevHashes,
     util::array::Array,
     vcpu_types::CpuType,

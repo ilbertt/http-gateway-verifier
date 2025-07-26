@@ -6,7 +6,7 @@ use sev::error::*;
 
 use crate::{
     launch::PageType,
-    snp::{SnpLaunchDigest, LD_BYTES},
+    snp::{LD_BYTES, SnpLaunchDigest},
     util::hash::sha384,
 };
 

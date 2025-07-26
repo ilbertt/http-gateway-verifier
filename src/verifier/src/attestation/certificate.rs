@@ -4,19 +4,19 @@ use anyhow::anyhow;
 use ic_cdk::{
     api::canister_self,
     management_canister::{
-        http_request, HttpMethod, HttpRequestArgs, HttpRequestResult, TransformArgs,
-        TransformContext, TransformFunc,
+        HttpMethod, HttpRequestArgs, HttpRequestResult, TransformArgs, TransformContext,
+        TransformFunc, http_request,
     },
 };
 use sev::{
-    certs::snp::{ca::Chain as CaChain, Certificate, Verifiable},
+    certs::snp::{Certificate, Verifiable, ca::Chain as CaChain},
     firmware::{guest::AttestationReport, host::CertType},
 };
 use x509_parser::{nom::AsBytes, pem::parse_x509_pem, prelude::X509Extension, x509::X509Name};
 
 use crate::attestation::{
     endorsement::Endorsement,
-    processor::{get_processor_model, ProcType},
+    processor::{ProcType, get_processor_model},
 };
 
 /// 5kB
@@ -98,7 +98,7 @@ pub fn validate_certificate_chain(ca_chain: CaChain, vek: Certificate) -> anyhow
                 return Err(anyhow::anyhow!(
                     "Failed to verify the ARK certificate: {:?}",
                     e
-                ))
+                ));
             }
         },
     }
@@ -111,7 +111,7 @@ pub fn validate_certificate_chain(ca_chain: CaChain, vek: Certificate) -> anyhow
             ErrorKind::Other => {
                 return Err(anyhow::anyhow!(
                     "The AMD ASK was not signed by the AMD ARK!"
-                ))
+                ));
             }
             _ => return Err(anyhow::anyhow!("Failed to verify ASK certificate: {:?}", e)),
         },
@@ -123,7 +123,7 @@ pub fn validate_certificate_chain(ca_chain: CaChain, vek: Certificate) -> anyhow
         }
         Err(e) => match e.kind() {
             ErrorKind::Other => {
-                return Err(anyhow::anyhow!("The VCEK was not signed by the AMD ASK!",))
+                return Err(anyhow::anyhow!("The VCEK was not signed by the AMD ASK!",));
             }
             _ => return Err(anyhow::anyhow!("Failed to verify VEK certificate: {:?}", e)),
         },

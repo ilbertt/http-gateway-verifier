@@ -1,7 +1,7 @@
 use serde_bytes::ByteBuf;
 use sev::firmware::guest::AttestationReport;
 use sev_snp_measure::{
-    snp::{snp_calc_launch_digest, SnpLaunchDigest, SnpMeasurementArgs},
+    snp::{SnpLaunchDigest, SnpMeasurementArgs, snp_calc_launch_digest},
     vcpu_types::CpuType,
     vmsa::GuestFeatures,
 };

@@ -8,7 +8,7 @@ use std::{
     collections::HashMap,
     convert::{TryFrom, TryInto},
 };
-use uuid::{uuid, Uuid};
+use uuid::{Uuid, uuid};
 
 /// Convert a UUID into a little endian slice
 pub fn guid_le_to_slice(guid: &str) -> Result<[u8; 16], MeasurementError> {
