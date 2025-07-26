@@ -59,6 +59,7 @@ pub async fn verify(args: VerifyArgs) -> anyhow::Result<String> {
             assets.ovmf.len(),
             assets.vmlinuz.len()
         );
+
         let measurement = sev_snp_launch_digest(MeasurementArgs {
             ovmf: assets.ovmf,
             kernel: assets.vmlinuz,
