@@ -1,32 +1,39 @@
 use candid::{CandidType, Deserialize};
 use serde_bytes::ByteBuf;
-use sev::firmware::guest::AttestationReport;
 
 use crate::{
     assets::retrieve_asset_bytes,
     attestation::{
         MeasurementArgs, download_certificate_authority_chain, download_report, download_vcek,
-        sev_snp_launch_digest, validate_certificate_chain, verify_attestation, verify_measurement,
-        verify_report_data,
+        prepare_report_data, sev_snp_launch_digest, validate_certificate_chain, verify_attestation,
+        verify_measurement, verify_report_data,
     },
 };
 
 #[derive(CandidType, Deserialize)]
 pub struct VerifyArgs {
+    /// The host of the HTTP gateway to fetch the report from.
+    /// See [SEV-SNP-enabled HTTP Gateways](https://github.com/dfinity/http-gateway-release/blob/main/attestation-guide.md#sev-snp-enabled-http-gateways).
     gateway_host: String,
+    /// The GitHub release hash of the assets to verify, which were previously uploaded using the [`icx-asset`](https://github.com/dfinity/sdk/blob/master/src/canisters/frontend/icx-asset/README.md) tool.
     release_hash: Option<String>,
+    /// The report data to verify. Must be 64 bytes long.
+    /// If not provided, a random 64 bytes will be generated.
     report_data: Option<ByteBuf>,
 }
 
 /// Steps:
-/// 1. load release assets from assets state
-/// 2. fetch report based on args
-/// 3. fetch certificate chain based on report
+/// 1. prepare report data
+/// 2. fetch report with that report data
+/// 3. fetch certificate chain with that report
 /// 4. verify certificate chain
 /// 5. verify report
-/// 6. compare report's measurement with release assets calculation
+/// 6. load release assets from assets state with that release hash (if provided)
+/// 7. compare report's measurement with release assets calculation (if provided)
 pub async fn verify(args: VerifyArgs) -> anyhow::Result<String> {
-    let report = fetch_report(&args).await?;
+    let report_data = prepare_report_data(args.report_data.as_ref()).await?;
+
+    let report = download_report(&args.gateway_host, &report_data).await?;
     ic_cdk::println!("Downloaded report: {report}");
 
     let ca_chain = download_certificate_authority_chain(&report).await?;
@@ -45,11 +52,9 @@ pub async fn verify(args: VerifyArgs) -> anyhow::Result<String> {
     ic_cdk::println!("{l}");
     log.push_str(&l);
 
-    if let Some(report_data) = args.report_data {
-        let l = verify_report_data(&report, &report_data)?;
-        ic_cdk::println!("{l}");
-        log.push_str(&l);
-    }
+    let l = verify_report_data(&report, &report_data)?;
+    ic_cdk::println!("{l}");
+    log.push_str(&l);
 
     if let Some(release_hash) = &args.release_hash {
         let assets = collect_release_assets(release_hash)?;
@@ -102,13 +107,4 @@ fn collect_release_assets(release_hash: &str) -> anyhow::Result<ReleaseAssets> {
         ovmf: ByteBuf::from(ovmf.as_ref()),
         vmlinuz: ByteBuf::from(vmlinuz.as_ref()),
     })
-}
-
-async fn fetch_report(args: &VerifyArgs) -> anyhow::Result<AttestationReport> {
-    let mut report_data = [0u8; 64];
-    if let Some(rd) = &args.report_data {
-        report_data.copy_from_slice(rd.as_slice());
-    }
-
-    download_report(&args.gateway_host, &report_data).await
 }

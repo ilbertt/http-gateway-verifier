@@ -19,11 +19,12 @@ serde = { workspace = true }
 serde_bytes = "0.11"
 
 sev = { workspace = true }
-anyhow = "1.0"
 x509-parser = { version = "0.16.0", features = ["verify"] }
 
+anyhow = "1.0"
 num-traits = "0.2"
 hex = { workspace = true }
+rand_chacha = "0.9"
 
 # We need this to override the system random number generator, which is not available in the canister.
 getrandom = { version = "0.2", features = ["custom"] }

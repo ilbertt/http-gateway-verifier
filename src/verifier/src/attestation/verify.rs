@@ -182,6 +182,10 @@ pub fn verify_report_data(
     if report.report_data.as_slice() == report_data {
         Ok("Report data matches!".to_string())
     } else {
-        Err(anyhow::anyhow!("Report data does not match"))
+        Err(anyhow::anyhow!(
+            "Report data does not match. Input: {}, From report: {}",
+            hex::encode(report_data),
+            hex::encode(report.report_data.as_slice()),
+        ))
     }
 }
