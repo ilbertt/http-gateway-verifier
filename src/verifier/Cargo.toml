@@ -14,6 +14,7 @@ sev-snp-measure = { path = "../measure" }
 candid = "0.10"
 ic-cdk = "0.18"
 ic-certified-assets = "0.3"
+ic-stable-structures = "0.7"
 
 serde = { workspace = true }
 serde_bytes = "0.11"

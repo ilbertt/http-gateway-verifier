@@ -1,17 +1,19 @@
 use std::any::type_name_of_val;
 
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use ic_cdk::{
     api::canister_self,
     management_canister::{
         HttpMethod, HttpRequestArgs, HttpRequestResult, TransformArgs, TransformContext,
-        TransformFunc, http_request, raw_rand,
+        TransformFunc, raw_rand,
     },
 };
 use rand_chacha::ChaCha12Rng;
 use rand_chacha::rand_core::{RngCore, SeedableRng};
 use serde_bytes::ByteBuf;
 use sev::firmware::guest::AttestationReport;
+
+use crate::outcall::{HTTP_STATUS_OK, http_request};
 
 /// 2kB
 const MAX_REPORT_SIZE_BYTES: u64 = 2_000;
@@ -41,7 +43,14 @@ pub async fn download_report(
         }),
     })
     .await
-    .map_err(|e| anyhow!("Failed to fetch report: url: {url}, {e}"))?;
+    .with_context(|| format!("Failed to fetch report: url: {url}"))?;
+
+    if res.status != HTTP_STATUS_OK {
+        return Err(anyhow::anyhow!(
+            "Failed to fetch report: status: {}",
+            res.status
+        ));
+    }
 
     ic_cdk::println!(
         "res report: status: {} body len: {}",

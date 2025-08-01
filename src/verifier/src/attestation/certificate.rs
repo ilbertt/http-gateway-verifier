@@ -1,11 +1,11 @@
 use std::{any::type_name_of_val, io::ErrorKind};
 
-use anyhow::anyhow;
+use anyhow::Context;
 use ic_cdk::{
     api::canister_self,
     management_canister::{
         HttpMethod, HttpRequestArgs, HttpRequestResult, TransformArgs, TransformContext,
-        TransformFunc, http_request,
+        TransformFunc,
     },
 };
 use sev::{
@@ -14,9 +14,12 @@ use sev::{
 };
 use x509_parser::{nom::AsBytes, pem::parse_x509_pem, prelude::X509Extension, x509::X509Name};
 
-use crate::attestation::{
-    endorsement::Endorsement,
-    processor::{ProcType, get_processor_model},
+use crate::{
+    attestation::{
+        endorsement::Endorsement,
+        processor::{ProcType, get_processor_model},
+    },
+    outcall::{HTTP_STATUS_OK, http_request_cached},
 };
 
 /// 5kB
@@ -148,7 +151,7 @@ pub async fn download_certificate_authority_chain(
     let processor_model = get_processor_model(report)?;
     let url = certificate_authority_chain_url(&processor_model, &Endorsement::Vcek);
 
-    let res = http_request(&HttpRequestArgs {
+    let res = http_request_cached(&HttpRequestArgs {
         url: url.clone(),
         method: HttpMethod::GET,
         headers: vec![],
@@ -163,9 +166,16 @@ pub async fn download_certificate_authority_chain(
         }),
     })
     .await
-    .map_err(|e| anyhow!("Failed to fetch certificate authority chain: url: {url}, {e}"))?;
+    .with_context(|| format!("Failed to fetch certificate authority chain: url: {url}"))?;
 
-    parse_two_pem_certs(&res.body)
+    let status = res.status();
+    if status != HTTP_STATUS_OK {
+        return Err(anyhow::anyhow!(
+            "Failed to fetch certificate authority chain: status: {status}",
+        ));
+    }
+
+    parse_two_pem_certs(res.body())
 }
 
 fn parse_two_pem_certs(input: &[u8]) -> anyhow::Result<CaChain> {
@@ -252,7 +262,7 @@ fn vcek_url(report: &AttestationReport) -> anyhow::Result<String> {
 pub async fn download_vcek(report: &AttestationReport) -> anyhow::Result<Certificate> {
     let url = vcek_url(report)?;
 
-    let res = http_request(&HttpRequestArgs {
+    let res = http_request_cached(&HttpRequestArgs {
         url: url.clone(),
         method: HttpMethod::GET,
         headers: vec![],
@@ -267,9 +277,14 @@ pub async fn download_vcek(report: &AttestationReport) -> anyhow::Result<Certifi
         }),
     })
     .await
-    .map_err(|e| anyhow!("Failed to fetch vcek: url: {url}, {e}"))?;
+    .with_context(|| format!("Failed to fetch vcek: url: {url}"))?;
 
-    Ok(Certificate::from_der(&res.body)?)
+    let status = res.status();
+    if status != HTTP_STATUS_OK {
+        return Err(anyhow::anyhow!("Failed to fetch vcek: status: {status}"));
+    }
+
+    Ok(Certificate::from_der(res.body())?)
 }
 
 #[ic_cdk::query]

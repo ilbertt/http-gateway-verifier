@@ -685,6 +685,7 @@ dependencies = [
  "hex",
  "ic-cdk",
  "ic-certified-assets",
+ "ic-stable-structures",
  "num-traits",
  "rand_chacha 0.9.0",
  "serde",
@@ -869,6 +870,15 @@ dependencies = [
  "sha2",
  "thiserror 1.0.69",
  "urlencoding",
+]
+
+[[package]]
+name = "ic-stable-structures"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e54aeb082293c69def5ab34c70593ba85ff000386f7d0eacdf73514daaeca031"
+dependencies = [
+ "ic_principal",
 ]
 
 [[package]]

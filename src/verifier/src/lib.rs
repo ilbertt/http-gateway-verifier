@@ -1,5 +1,7 @@
 mod assets;
 mod attestation;
+mod memory;
+mod outcall;
 mod verify;
 
 use ic_cdk::{init, post_upgrade, pre_upgrade, update};
