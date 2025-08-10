@@ -180,7 +180,7 @@ pub fn verify_report_data(
     report_data: &[u8],
 ) -> anyhow::Result<String> {
     if report.report_data.as_slice() == report_data {
-        Ok("Report data matches!".to_string())
+        Ok("Report data matches!\n".to_string())
     } else {
         Err(anyhow::anyhow!(
             "Report data does not match. Input: {}, From report: {}",
