@@ -25,7 +25,7 @@ fn http_gateway_report_url(gateway_host: &str) -> String {
     format!("https://{gateway_host}/sev-snp/report")
 }
 
-pub async fn download_report(
+pub async fn fetch_report(
     gateway_host: &str,
     report_data: &ReportData,
 ) -> anyhow::Result<AttestationReport> {

@@ -4,7 +4,7 @@ use serde_bytes::ByteBuf;
 use crate::{
     assets::retrieve_asset_bytes,
     attestation::{
-        MeasurementArgs, download_certificate_authority_chain, download_report, download_vcek,
+        MeasurementArgs, fetch_certificate_authority_chain, fetch_report, fetch_vcek,
         prepare_report_data, sev_snp_launch_digest, validate_certificate_chain, verify_attestation,
         verify_measurement, verify_report_data,
     },
@@ -33,14 +33,14 @@ pub struct VerifyArgs {
 pub async fn verify(args: VerifyArgs) -> anyhow::Result<String> {
     let report_data = prepare_report_data(args.report_data.as_ref()).await?;
 
-    let report = download_report(&args.gateway_host, &report_data).await?;
-    ic_cdk::println!("Downloaded report: {report}");
+    let report = fetch_report(&args.gateway_host, &report_data).await?;
+    ic_cdk::println!("Fetched report: {report}");
 
-    let ca_chain = download_certificate_authority_chain(&report).await?;
-    ic_cdk::println!("Downloaded certificate authority chain");
+    let ca_chain = fetch_certificate_authority_chain(&report).await?;
+    ic_cdk::println!("Fetched certificate authority chain");
 
-    let vcek = download_vcek(&report).await?;
-    ic_cdk::println!("Downloaded vcek");
+    let vcek = fetch_vcek(&report).await?;
+    ic_cdk::println!("Fetched vcek");
 
     let mut log = String::new();
 

@@ -145,7 +145,7 @@ fn certificate_authority_chain_url(processor_model: &ProcType, endorser: &Endors
     )
 }
 
-pub async fn download_certificate_authority_chain(
+pub async fn fetch_certificate_authority_chain(
     report: &AttestationReport,
 ) -> anyhow::Result<CaChain> {
     let processor_model = get_processor_model(report)?;
@@ -260,7 +260,7 @@ fn vcek_url(report: &AttestationReport) -> anyhow::Result<String> {
     Ok(vcek_url)
 }
 
-pub async fn download_vcek(report: &AttestationReport) -> anyhow::Result<Certificate> {
+pub async fn fetch_vcek(report: &AttestationReport) -> anyhow::Result<Certificate> {
     let url = vcek_url(report)?;
 
     let res = http_request_cached(&HttpRequestArgs {
