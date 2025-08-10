@@ -164,6 +164,7 @@ pub async fn download_certificate_authority_chain(
             ),
             context: vec![],
         }),
+        is_replicated: Some(true),
     })
     .await
     .with_context(|| format!("Failed to fetch certificate authority chain: url: {url}"))?;
@@ -275,6 +276,7 @@ pub async fn download_vcek(report: &AttestationReport) -> anyhow::Result<Certifi
             ),
             context: vec![],
         }),
+        is_replicated: Some(false),
     })
     .await
     .with_context(|| format!("Failed to fetch vcek: url: {url}"))?;

@@ -41,6 +41,7 @@ pub async fn download_report(
             function: TransformFunc::new(canister_self(), transform_function_name()),
             context: vec![],
         }),
+        is_replicated: Some(false),
     })
     .await
     .with_context(|| format!("Failed to fetch report: url: {url}"))?;

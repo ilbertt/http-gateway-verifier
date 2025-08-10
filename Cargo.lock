@@ -683,7 +683,7 @@ dependencies = [
  "candid",
  "getrandom 0.2.16",
  "hex",
- "ic-cdk",
+ "ic-cdk 0.19.0-beta.1",
  "ic-certified-assets",
  "ic-stable-structures",
  "num-traits",
@@ -716,9 +716,27 @@ checksum = "db9cc3e0e86ee12504c749fa33793014f1f4d6956a8a70e4db595169c5f6ac26"
 dependencies = [
  "candid",
  "ic-cdk-executor",
- "ic-cdk-macros",
+ "ic-cdk-macros 0.18.5",
  "ic-error-types",
- "ic-management-canister-types",
+ "ic-management-canister-types 0.3.1",
+ "ic0",
+ "serde",
+ "serde_bytes",
+ "slotmap",
+ "thiserror 2.0.12",
+]
+
+[[package]]
+name = "ic-cdk"
+version = "0.19.0-beta.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae467e7e2a17920af8dce2eb5bae39a3257a3e9bc3c2bdeab1d2d413022748ce"
+dependencies = [
+ "candid",
+ "ic-cdk-executor",
+ "ic-cdk-macros 0.19.0-beta.1",
+ "ic-error-types",
+ "ic-management-canister-types 0.4.0-beta.1",
  "ic0",
  "serde",
  "serde_bytes",
@@ -740,6 +758,19 @@ name = "ic-cdk-macros"
 version = "0.18.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b190cace2b141a5801252115bdc27397d47f086c928af3e917ce1da81b17e3cd"
+dependencies = [
+ "candid",
+ "darling 0.20.11",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
+]
+
+[[package]]
+name = "ic-cdk-macros"
+version = "0.19.0-beta.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69d541e2bc038034bd53a22ac494397df5e16fe1e01cbcc7a9cdb30560e859b2"
 dependencies = [
  "candid",
  "darling 0.20.11",
@@ -788,7 +819,7 @@ dependencies = [
  "base64 0.13.1",
  "candid",
  "hex",
- "ic-cdk",
+ "ic-cdk 0.18.5",
  "ic-certification",
  "ic-representation-independent-hash",
  "ic-response-verification",
@@ -832,6 +863,17 @@ name = "ic-management-canister-types"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98554c2d8a30c00b6bfda18062fdcef21215cad07a52d8b8b1eb3130e51bfe71"
+dependencies = [
+ "candid",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
+name = "ic-management-canister-types"
+version = "0.4.0-beta.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f827a1c32e3393fa958bdbc2778260c55e1842c4e9e27536fcadc6555c7ad0d"
 dependencies = [
  "candid",
  "serde",
