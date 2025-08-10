@@ -40,7 +40,6 @@ dfx identity remove temp
 Then, make sure you have permissions to upload assets to the canister (**Note**: you need to be a controller of the canister to make these commands work):
 
 ```shell
-dfx canister call --ic 5slwp-diaaa-aaaae-abl7a-cai grant_permission '(record { to_principal = principal "<principal-id-obtained-above>"; permission = variant { Prepare } })'
 dfx canister call --ic 5slwp-diaaa-aaaae-abl7a-cai grant_permission '(record { to_principal = principal "<principal-id-obtained-above>"; permission = variant { Commit } })'
 ```
 
