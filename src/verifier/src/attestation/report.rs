@@ -41,7 +41,7 @@ pub async fn fetch_report(
             function: TransformFunc::new(canister_self(), transform_function_name()),
             context: vec![],
         }),
-        is_replicated: Some(false),
+        is_replicated: Some(true),
     })
     .await
     .with_context(|| format!("Failed to fetch report: url: {url}"))?;
