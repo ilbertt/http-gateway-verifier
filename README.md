@@ -51,7 +51,9 @@ First, you must download the following assets from the latest [HTTP Gateway GitH
 -   `OVMF.fd`
 -   `vmlinuz`
 
-For example, for release [fc59bee](https://github.com/dfinity/http-gateway-release/releases/tag/fc59bee) you will download those assets into the `data/release-assets/fc59bee487054539d1b76fdd7962274fe3393822` folder.
+For example, for release [f54172b](https://github.com/dfinity/http-gateway-release/releases/tag/f54172b) you will download those assets into the `data/release-assets/f54172b93fe5edd126570e20d8efe8247e721cbc` folder.
+
+> **Note**: The canister sends replicated HTTPS Outcalls to the HTTP Gateway to fetch the attestation report. The HTTP Gateway supports idempotent requests since release [f54172b](https://github.com/dfinity/http-gateway-release/releases/tag/f54172b). Releases before this one will not work.
 
 Then, you must upload the release assets to the canister. You can use the [`sync_release_assets.sh`](./scripts/sync_release_assets.sh) script (which assumes that the [Preparation](#preparation) step has been completed):
 
@@ -61,7 +63,7 @@ CANISTER_ID=5slwp-diaaa-aaaae-abl7a-cai IC_NETWORK=https://icp-api.io ./scripts/
 
 > **Note**: This command _syncs_ the content of the `data/release-assets` folder with the canister assets. You may lose data.
 
-You can now pass the release hash (in this example, `fc59bee487054539d1b76fdd7962274fe3393822`) to the canister's `verify` method argument.
+You can now pass the release hash (in this example, `f54172b93fe5edd126570e20d8efe8247e721cbc`) to the canister's `verify` method argument.
 
 ## Development
 
